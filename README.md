@@ -2,7 +2,7 @@
 
 ```mermaid
 flowchart TD
-    A[Start] --> B[Load Environment Variables]
+    A[Start] --> B[Load Env file for API key]
     B --> C[Parse Arguments: --link, --question, --model]
     C --> D[ask_question Function]
     D --> E[WebBaseLoader: Load Webpage Content]
