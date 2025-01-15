@@ -1,19 +1,20 @@
 from langchain_community.document_loaders import WebBaseLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain_huggingface import HuggingFaceEmbeddings
+from langchain_huggingface import HuggingFaceEmbeddings, HuggingFaceEndpoint
 from langchain_community.vectorstores import Chroma
 from langchain.chains import RetrievalQA
 from langchain_groq import ChatGroq
 from langchain.prompts import PromptTemplate
 import os
+import argparse
 from dotenv import load_dotenv
 
 
 load_dotenv()
-groq_api_key = os.getenv("GROQ_API_KEY")
+hf_api_key: str = os.getenv("HUGGINGFACEHUB_API_TOKEN")
 
 
-def ask_question(link, question, llm_model):
+def ask_question(link: str, question: str, model_name: str) :
 
     loader = WebBaseLoader(link)
     documents = loader.load()
@@ -28,8 +29,7 @@ def ask_question(link, question, llm_model):
     vector_store = Chroma.from_documents(document_chunks, embedding_model)
 
     prompt_template = """
-    Use the context only to answer the question at the end. Answer the following question in 1-2 sentences. 
-    Be concise and to the point. If you don't know the answer, just say that you don't know, don't try to make up an answer.
+    Use the context only to answer the question at the end.Be concise and to the point. If you don't know the answer, just say that you don't know, don't try to make up an answer.
 
     Context: {context}
 
@@ -41,6 +41,13 @@ def ask_question(link, question, llm_model):
     prompt = PromptTemplate(
         template=prompt_template, input_variables=["context", "question"]
     )
+    
+    llm_model = HuggingFaceEndpoint(
+        repo_id=model_name,
+        huggingfacehub_api_token=hf_api_key,
+        max_new_tokens= 250,
+        temperature= 0.5,
+    )
 
     qa_chain = RetrievalQA.from_chain_type(
         llm=llm_model,
@@ -49,15 +56,19 @@ def ask_question(link, question, llm_model):
         chain_type_kwargs={"prompt": prompt},
     )
 
-    answer = qa_chain.invoke(question)
-
+    answer: dict[str, any] = qa_chain.invoke(question)
     return answer
 
 
-if __name__ == "__main__":
-    webpage_link = "https://en.wikipedia.org/wiki/Sigmund_Freud"
-    question = "what was freud's realtionship with Wilhelm Fliess?"
-    llm_model = ChatGroq(model_name="llama-3.3-70b-versatile")
+def main():
+    parser = argparse.ArgumentParser(description="Ask questions using talk_to_web_rag.py.")
+    parser.add_argument("--link", required=True, help="The link to the webpage.")
+    parser.add_argument("--question", required=True, help="The question to ask.")
+    parser.add_argument("--model", required=True, help="The name of the LLM model to use.")
+    args = parser.parse_args()
 
-    answer = ask_question(webpage_link, question, llm_model)
-    print("Answer:", answer['result'])
+    answer = ask_question(args.link, args.question, args.model)
+    print("Answer:", answer["result"])
+    
+if __name__ == "__main__":
+    main()

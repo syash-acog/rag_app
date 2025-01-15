@@ -1,0 +1,29 @@
+[project]
+name = "rag-app"
+version = "0.1.0"
+description = "simple talk to web rag app"
+authors = [
+    {name = "syash-acog",email = "syash@aganitha.ai"}
+]
+packages = [
+    { include = "rag_app" }
+]
+
+requires-python = ">=3.11,<4.0"
+dependencies = [
+    "langchain-community (>=0.3.14,<0.4.0)",
+    "langchain (>=0.3.14,<0.4.0)",
+    "bs4 (>=0.0.2,<0.0.3)",
+    "langchain-groq (>=0.2.3,<0.3.0)",
+    "python-dotenv (>=1.0.1,<2.0.0)",
+    "langchain-huggingface (>=0.1.2,<0.2.0)",
+    "chromadb (>=0.6.3,<0.7.0)"
+]
+
+[tool.poetry.scripts]
+talk_to_web_rag = "rag_app.talk_to_web_rag:main"
+
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
